@@ -14,9 +14,12 @@ public partial class TouchReceiver : MonoBehaviour
     [SerializeField]
     Material currentMat;
 
-    float distance = 0f;
     int numberOfFingers = 0;
     public bool IsTouching = false;
+    Vector3 previousPosition1 = Vector3.zero;
+    Vector3 previousPosition2 = Vector3.zero;
+    float previousDistance = 0f;
+    float previousRotation = 0f;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -40,42 +43,89 @@ public partial class TouchReceiver : MonoBehaviour
         //Simple example:
         if (Touch.activeTouches.Count == 0)
         {
-            distance = 0f;
             numberOfFingers = 0;
             IsTouching = false;
+            previousPosition1 = Vector3.zero;
+            previousPosition2 = Vector3.zero;
+            previousDistance = 0f;
+            previousRotation = 0f;
+            return;
         }
         else if (Touch.activeTouches.Count >= 2)
         {
-            numberOfFingers = Touch.activeTouches.Count;
-            var touch0 = Touch.activeTouches[0];
-            var touch1 = Touch.activeTouches[1];
-
-            Vector3 worldPos0 = Camera.main.ScreenToWorldPoint(new Vector3(touch0.screenPosition.x, touch0.screenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
+            // Moving object with two fingers, aswell as scaling and rotating
+            var touch1 = Touch.activeTouches[0];
+            var touch2 = Touch.activeTouches[1];
+            int fingerId1 = touch1.finger.index;
+            int fingerId2 = touch2.finger.index;
             Vector3 worldPos1 = Camera.main.ScreenToWorldPoint(new Vector3(touch1.screenPosition.x, touch1.screenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
+            Vector3 worldPos2 = Camera.main.ScreenToWorldPoint(new Vector3(touch2.screenPosition.x, touch2.screenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
 
-            Vector3 midPoint = (worldPos0 + worldPos1) / 2f;
-            transform.position = midPoint;
-            float currentDistance = Vector3.Distance(worldPos0, worldPos1);
-            if (distance == 0f)
-                distance = currentDistance;
+            // Move
+            Vector3 midPoint = (worldPos1 + worldPos2) / 2f;
+            Vector3 previousMidPoint = (previousPosition1 + previousPosition2) / 2f;
+            if (numberOfFingers != 2)
+            {
+                previousPosition1 = worldPos1;
+                previousPosition2 = worldPos2;
+            }
             else
             {
-                float delta = currentDistance - distance;
-                transform.localScale += new Vector3(delta, delta, delta);
-                distance = currentDistance;
+                Vector3 diff = midPoint - previousMidPoint;
+                transform.position += diff;
             }
 
-            var currentRotation = Quaternion.FromToRotation(Vector3.right, (worldPos1 - worldPos0).normalized);
-            transform.rotation = currentRotation;
+            // Scale
+            float currentDistance = Vector3.Distance(worldPos1, worldPos2);
+            if (numberOfFingers != 2)
+            {
+                previousDistance = currentDistance;
+            }
+            else
+            {
+                float scaleFactor = currentDistance / previousDistance;
+                transform.localScale *= scaleFactor;
+                previousDistance = currentDistance;
+            }
+
+            // Rotate
+            float currentRotation = Mathf.Atan2(worldPos2.y - worldPos1.y, worldPos2.x - worldPos1.x) * Mathf.Rad2Deg;
+            if (numberOfFingers != 2)
+            {
+                previousRotation = currentRotation;
+            }
+            else
+            {
+                float rotationDiff = currentRotation - previousRotation;
+                transform.Rotate(Vector3.forward, rotationDiff);
+                previousRotation = currentRotation;
+            }
+
+            previousPosition1 = worldPos1;
+            previousPosition2 = worldPos2;
+            numberOfFingers = 2;
         }
-        else if (Touch.activeTouches.Count == 1 && numberOfFingers == 0)
+        else if (Touch.activeTouches.Count == 1)
         {
+            // Moving object with one finger
             var touch = Touch.activeTouches[0];
             int fingerId = touch.finger.index;
-
             Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touch.screenPosition.x, touch.screenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
 
-            transform.position = worldPos;
+            if (numberOfFingers != 1)
+            {
+                previousPosition1 = worldPos;
+                numberOfFingers = 1;
+            }
+            else
+            {
+                Vector3 diff = worldPos - previousPosition1;
+                transform.position += diff;
+                previousPosition1 = worldPos;
+            }
+            previousPosition2 = Vector3.zero;
+            previousDistance = 0f;
+            previousRotation = 0f;
         }
     }
 
