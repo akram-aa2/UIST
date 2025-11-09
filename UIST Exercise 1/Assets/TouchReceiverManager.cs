@@ -34,30 +34,8 @@ public class TouchReceiverManager : MonoBehaviour
             FindTouchedObject();
         }
     }
-
-    // void FindTouchedObject()
-    // {
-    //     var touch = Touch.activeTouches[0];
-    //     int fingerId = touch.finger.index;
-    //     Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touch.screenPosition.x, touch.screenPosition.y, Mathf.Abs(Camera.main.transform.position.z)));
-    //     Ray ray = Camera.main.ScreenPointToRay(touch.screenPosition);
-    //     RaycastHit hit;
-    //     if (Physics.Raycast(ray, out hit))
-    //     {
-    //         touchedObject = hit.collider.gameObject;
-    //         if (touchedObject != null && touchedObject.GetComponent<TouchReceiver>() != null)
-    //         {
-    //             touchedObject.GetComponent<TouchReceiver>().IsTouching = true;
-    //             isTouching = true;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         touchedObject = null;
-    //         isTouching = false;
-    //     }
-    // }
     
+    // Finds the topmost touched object with a TouchReceiver component, by using raycasting
     void FindTouchedObject()
     {
         var touch = Touch.activeTouches[0];
@@ -71,7 +49,7 @@ public class TouchReceiverManager : MonoBehaviour
             return;
         }
 
-        // Get the hit with the highest render queue (i.e. topmost visually)
+        // Get the hit with the highest render queue, which is visually on top
         GameObject topHitObject = null;
         int highestQueue = int.MinValue;
 
@@ -89,6 +67,8 @@ public class TouchReceiverManager : MonoBehaviour
             }
         }
 
+        // If the top hit object has a TouchReceiver component, set it as the touched object
+        // so that it can handle the touch input + put it on top visually
         if (topHitObject != null && topHitObject.GetComponent<TouchReceiver>() != null)
         {
             touchedObject = topHitObject;
@@ -97,7 +77,6 @@ public class TouchReceiverManager : MonoBehaviour
             var receiver = touchedObject.GetComponent<TouchReceiver>();
             receiver.IsTouching = true;
 
-            // Bring visually to front by increasing render queue
             Renderer r = touchedObject.GetComponent<Renderer>();
             if (r != null)
             {

@@ -53,7 +53,6 @@ public partial class TouchReceiver : MonoBehaviour
         }
         else if (Touch.activeTouches.Count >= 2)
         {
-            // Moving object with two fingers, aswell as scaling and rotating
             var touch1 = Touch.activeTouches[0];
             var touch2 = Touch.activeTouches[1];
             int fingerId1 = touch1.finger.index;
