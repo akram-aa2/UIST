@@ -59,10 +59,6 @@ public class CircleDetection : MonoBehaviour
 
         if (redPixelCount > 20)
         {
-            if (initialAmountOfRedPixels == 0)
-            {
-                initialAmountOfRedPixels = redPixelCount;
-            }
             framesWithoutDetection = 0;
             redSphere.SetActive(true);
             centerX = redPixelXSum / redPixelCount;
