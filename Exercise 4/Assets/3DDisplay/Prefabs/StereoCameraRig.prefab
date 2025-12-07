@@ -47,6 +47,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraRig: {fileID: 3973757078473717652}
+  centerPosition: {x: 0, y: 0, z: 0}
+  movementScale: 2
 --- !u!1 &5404413917304318257
 GameObject:
   m_ObjectHideFlags: 0

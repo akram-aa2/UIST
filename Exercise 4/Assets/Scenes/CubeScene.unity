@@ -1557,6 +1557,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StereoCameraRig
       objectReference: {fileID: 0}
+    - target: {fileID: 5254938957187887898, guid: 17e73dba4b9136049bdc25c9a263db6d, type: 3}
+      propertyPath: movementScale
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 8358819450358996311, guid: 17e73dba4b9136049bdc25c9a263db6d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

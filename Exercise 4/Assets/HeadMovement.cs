@@ -5,12 +5,16 @@ public class HeadMovement : MonoBehaviour
     private WebCamTexture webcamTexture;
     private Vector3 lastPosition;
     public GameObject cameraRig;
+    public Vector3 centerPosition;
+    [SerializeField] private float movementScale = 1.0f;
+    [SerializeField] private GameObject player;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         webcamTexture = new WebCamTexture();
         webcamTexture.Play();
+        centerPosition = cameraRig.transform.position;
     }
 
     // Update is called once per frame
@@ -39,6 +43,8 @@ public class HeadMovement : MonoBehaviour
         int glassesPixelYSum = 0;
         int centerX = 0;
         int centerY = 0;
+        float newCenterX = 0;
+        float newCenterY = 0;
 
         //TODO: Implement tracking of a red circle
         for (int y = 0; y < height; y++)
@@ -46,7 +52,7 @@ public class HeadMovement : MonoBehaviour
             for (int x = 0; x < width; x++)
             {
                 UnityEngine.Color pixelColor = pixels[y * width + x];
-                if ((pixelColor.r > pixelColor.g*2 && pixelColor.r > pixelColor.b*2 && pixelColor.r > 0.4f) || (pixelColor.b > pixelColor.g*2 && pixelColor.b > pixelColor.r*2 && pixelColor.b > 0.4f))
+                if (IsTargetHue(pixelColor))
                 {
                     glassesPixelCount++;
                     glassesPixelXSum += x;
@@ -60,16 +66,40 @@ public class HeadMovement : MonoBehaviour
             centerX = glassesPixelXSum / glassesPixelCount;
             centerY = glassesPixelYSum / glassesPixelCount;
             // TODO: Move the tracking object (e.g., sphere) to the detected circle's center
-            int newX = (centerX * Screen.width) / width;
-            int newY = (centerY * Screen.height) / height;
-            Vector3 screenPosition = new Vector3(newX, newY, Camera.main.nearClipPlane + 1f);
-            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
-            cameraRig.transform.position = worldPosition;
-            lastPosition = worldPosition;
+            newCenterX = (float)centerX/(float)width - 0.5f;
+            newCenterY = (float)centerY/(float)height - 0.5f;
+            Debug.Log("Glasses detected at: " + newCenterX + ", " + newCenterY);
+            if (player == null)
+            {
+                cameraRig.transform.position = new Vector3(centerPosition.x - newCenterX * movementScale, centerPosition.y + newCenterY * movementScale, centerPosition.z);
+                Debug.Log("No player assigned");
+            }
+            else 
+            {
+                // if a player object is assigned, move depending on player's orientation up down left right
+                Vector3 right = player.transform.right;
+                Vector3 up = player.transform.up;
+                cameraRig.transform.position = centerPosition + (right * -newCenterX + up * newCenterY) * movementScale;
+            }
+            lastPosition = cameraRig.transform.position;
         }
         else
         {
             cameraRig.transform.position = lastPosition;
         }
+    }
+
+    bool IsTargetHue(UnityEngine.Color color)
+    {
+        // Convert RGB to HSV
+        float h, s, v;
+        UnityEngine.Color.RGBToHSV(color, out h, out s, out v);
+
+        bool isRedHue = (h < 0.083f || h > 0.916f);
+        bool isBlueHue = (h > 0.57f && h < 0.77f);
+
+        bool isSaturated = s > 0.3f;
+
+        return (isRedHue || isBlueHue) && isSaturated;
     }
 }
