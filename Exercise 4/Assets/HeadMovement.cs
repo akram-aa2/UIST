@@ -8,11 +8,12 @@ public class HeadMovement : MonoBehaviour
     public Vector3 centerPosition;
     [SerializeField] private float movementScale = 1.0f;
     [SerializeField] private GameObject player;
+    [SerializeField] private bool cameraMirrored = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        webcamTexture = new WebCamTexture();
+        webcamTexture = new WebCamTexture(WebCamTexture.devices[1].name,1920,1080,30);
         webcamTexture.Play();
         centerPosition = cameraRig.transform.position;
     }
@@ -61,17 +62,20 @@ public class HeadMovement : MonoBehaviour
             }
         }
 
-        if (glassesPixelCount > 20)
+        if (glassesPixelCount > 10)
         {
             centerX = glassesPixelXSum / glassesPixelCount;
             centerY = glassesPixelYSum / glassesPixelCount;
             // TODO: Move the tracking object (e.g., sphere) to the detected circle's center
             newCenterX = (float)centerX/(float)width - 0.5f;
             newCenterY = (float)centerY/(float)height - 0.5f;
-            Debug.Log("Glasses detected at: " + newCenterX + ", " + newCenterY);
+            if (cameraMirrored)
+            {
+                newCenterX = -newCenterX;
+            }
             if (player == null)
             {
-                cameraRig.transform.position = new Vector3(centerPosition.x - newCenterX * movementScale, centerPosition.y + newCenterY * movementScale, centerPosition.z);
+                cameraRig.transform.position = new Vector3(centerPosition.x + newCenterX * movementScale, centerPosition.y + newCenterY * movementScale, centerPosition.z);
                 Debug.Log("No player assigned");
             }
             else 
@@ -79,7 +83,7 @@ public class HeadMovement : MonoBehaviour
                 // if a player object is assigned, move depending on player's orientation up down left right
                 Vector3 right = player.transform.right;
                 Vector3 up = player.transform.up;
-                cameraRig.transform.position = centerPosition + (right * -newCenterX + up * newCenterY) * movementScale;
+                cameraRig.transform.position = centerPosition + (right * newCenterX + up * newCenterY) * movementScale;
             }
             lastPosition = cameraRig.transform.position;
         }
@@ -95,8 +99,8 @@ public class HeadMovement : MonoBehaviour
         float h, s, v;
         UnityEngine.Color.RGBToHSV(color, out h, out s, out v);
 
-        bool isRedHue = (h < 0.083f || h > 0.916f);
-        bool isBlueHue = (h > 0.57f && h < 0.77f);
+        bool isRedHue = h < 0.083f || h > 0.916f;
+        bool isBlueHue = h > 0.5f && h < 0.77f;
 
         bool isSaturated = s > 0.3f;
 
