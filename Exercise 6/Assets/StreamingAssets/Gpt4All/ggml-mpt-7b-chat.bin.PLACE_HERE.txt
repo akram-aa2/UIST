@@ -1,0 +1,1 @@
+Place ggml-mpt-7b-chat.bin in this folder.
